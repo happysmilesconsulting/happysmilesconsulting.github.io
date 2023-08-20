@@ -1870,7 +1870,7 @@ h1, h2, h3, h4, h5, h6 {
   transition: all 0.5s;
   z-index: 997;
   background: #fff;
-  margin-bottom: 31px; }
+  margin-bottom: 20px; }
   @media (max-width: 1665px) {
     #header {
       margin-bottom: 0px; } }
@@ -1884,7 +1884,8 @@ h1, h2, h3, h4, h5, h6 {
     background: #242429; }
 
 #logo {
-  margin-left: 15px; }
+  margin-left: 15px; height: 30px; width: 120px;
+}
   @media (max-width: 673px) {
     #logo {
       margin-left: 20px; } }
