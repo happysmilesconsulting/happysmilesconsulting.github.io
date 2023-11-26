@@ -4,7 +4,7 @@ import re
 import sys
 import time
 
-SCRIPT_DIR = os.path.basename(os.path.abspath(__file__))
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATE_MARKER_RE = re.compile('{{{.*?}}}')
 
 def read_file(fpath):
