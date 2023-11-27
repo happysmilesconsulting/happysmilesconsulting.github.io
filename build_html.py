@@ -22,6 +22,18 @@ def write_file(fpath, doc_data):
     with open(fpath, 'w') as fh:
         fh.write(doc_data)
 
+def update_header_template(doc, outpath):
+    """
+    Update the doc for nav bar based on basename(outpath)
+        <li><a href="index.html"> -> <li><a class="active" href="index.html">
+    """
+    href_path = os.path.basename(outpath)
+    search_str = f'<li><a href="{href_path}">'
+    replace_str = f'<li><a class="active" href="{href_path}">'
+    if doc.find(search_str) > 0:
+        return doc.replace(search_str, replace_str)
+    return doc
+
 def main(fpath, outpath, template_dir):
     """
         fpath: input file with template markers
@@ -44,6 +56,8 @@ def main(fpath, outpath, template_dir):
         if not os.path.exists(template_path):
             raise ValueError(f"template not found: {template_path}")
         t_doc = read_file(template_path)
+        if m == 'header':
+            t_doc = update_header_template(t_doc, outpath)
         doc = doc.replace(marker, t_doc)
     
     write_file(outpath, doc)
