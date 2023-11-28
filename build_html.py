@@ -109,7 +109,7 @@ def main(fpath, outpath, template_dir):
             doc = handle_setenv_marker(marker, doc)
         if m.startswith('get'):
             doc = handle_get_marker(marker, doc)
-    
+    doc = doc.lstrip()
     write_file(outpath, doc)
 
 if __name__ == "__main__":
