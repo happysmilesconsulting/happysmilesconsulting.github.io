@@ -5,7 +5,8 @@ import sys
 import time
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-TEMPLATE_MARKER_RE = re.compile('{{{.*?}}}')
+TEMPLATE_MARKER_RE = re.compile('{{.*?}}')
+TEMPLATE_ENV = {}
 
 def read_file(fpath):
     with open(fpath) as fh:
@@ -34,6 +35,53 @@ def update_header_template(doc, outpath):
         return doc.replace(search_str, replace_str)
     return doc
 
+def handle_include_marker(marker, doc, template_dir, outpath):
+    # marker = {{include header(foo=param_value, bar=value)}}
+    m = extract_marker_text(marker).replace('include', '').strip().split('(')[0]
+    # TODO handle param_values
+    # tenative plan: copy the global template_dir, update with param_values
+    template_path = os.path.join(template_dir, f"{m}.template.html")
+    if not os.path.exists(template_path):
+        raise ValueError(f"template not found: {template_path}")
+    t_doc = read_file(template_path)
+    if m == 'header':
+        t_doc = update_header_template(t_doc, outpath)
+    doc = doc.replace(marker, t_doc)
+    return doc
+
+def extract_key_value(env_line):
+    """ return {key: value} for input of 'key=value' str """
+    arr = env_line.split('=')
+    k = arr[0].strip()
+    v = '='.join(arr[1:]).strip()
+    return {k: v}
+
+def handle_setenv_marker(marker, doc):
+    # marker = '{{setenv title=My favorite site}}'
+    global TEMPLATE_ENV
+    m = extract_marker_text(marker).strip().replace('setenv', '', 1)
+    d = extract_key_value(m)
+    print(f"setting env: {d}")
+    TEMPLATE_ENV.update(d)
+    return doc.replace(marker, '')
+
+def handle_get_marker(marker, doc):
+    # marker = {{get foo}}
+    # apply all variable from templateenv
+    m = extract_marker_text(marker)
+    val = ''
+    # todo get value from TEMPLATE_ENV
+    key = m.replace('get', '').strip()
+    if key in TEMPLATE_ENV:
+        val = TEMPLATE_ENV[key]
+    else:
+        print(f"Couldn't find value for {m}. using ''...")
+    return doc.replace(marker, val)
+
+
+def extract_marker_text(marker):
+    return marker.strip('{} ')
+
 def main(fpath, outpath, template_dir):
     """
         fpath: input file with template markers
@@ -49,16 +97,18 @@ def main(fpath, outpath, template_dir):
         write_file(outpath, doc)
         return
     
-    for marker in markers:
-        m = marker.strip('{} ')
+    # need to make this a while() loop as more markers may appear
+    # when templates are included in the doc
+    while (markers:= TEMPLATE_MARKER_RE.findall(doc)):
+        marker = markers[0]
+        m = extract_marker_text(marker)
         print(f"updating marker '{m}'")
-        template_path = os.path.join(template_dir, f"{m}.template.html")
-        if not os.path.exists(template_path):
-            raise ValueError(f"template not found: {template_path}")
-        t_doc = read_file(template_path)
-        if m == 'header':
-            t_doc = update_header_template(t_doc, outpath)
-        doc = doc.replace(marker, t_doc)
+        if m.startswith('include'):
+            doc = handle_include_marker(marker, doc, template_dir, outpath)
+        if m.startswith('setenv'):
+            doc = handle_setenv_marker(marker, doc)
+        if m.startswith('get'):
+            doc = handle_get_marker(marker, doc)
     
     write_file(outpath, doc)
 
