@@ -19,7 +19,7 @@ def write_file(fpath, doc_data):
         ts = time.time()
         bkp_path = f"/tmp/{os.path.basename(fpath)}.{ts}.bkp"
         print(f"moving existing {fpath} to {bkp_path}")
-        os.rename(fpath, bkp_path)
+        # os.rename(fpath, bkp_path)
     with open(fpath, 'w') as fh:
         fh.write(doc_data)
 
